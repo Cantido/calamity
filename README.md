@@ -1,6 +1,6 @@
 # Calamity
 
-**TODO: Add description**
+Protocols defining CQRS/ES behaviors.
 
 ## Installation
 
