@@ -10,9 +10,7 @@ defmodule Calamity do
   def dispatch(command, aggregates, event_store) do
     {agg_mod, agg_id} = Command.aggregate(command)
 
-    aggregate = Map.get_lazy(aggregates, agg_id, fn ->
-      apply(agg_mod, :new, [agg_id])
-    end)
+    aggregate = Map.get(aggregates, agg_id, struct!(agg_mod))
 
     events =
       Aggregate.execute(aggregate, command)

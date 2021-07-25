@@ -5,19 +5,13 @@ defmodule Calamity.BankAccount do
     :name
   ]
 
-  def new(id) do
-    %Calamity.BankAccount{
-      account_id: id
-    }
-  end
-
   defimpl Calamity.Aggregate  do
     def id(account) do
       account.account_id
     end
 
-    def execute(account, %Calamity.Commands.CreateAccount{}) do
-      %Calamity.Events.AccountCreated{account_id: account.account_id, balance: 0}
+    def execute(%{account_id: nil}, %Calamity.Commands.CreateAccount{account_id: account_id}) do
+      %Calamity.Events.AccountCreated{account_id: account_id, balance: 0}
     end
 
     def execute(account, %Calamity.Commands.RenameAccount{name: name}) do
