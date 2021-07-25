@@ -5,8 +5,9 @@ defmodule Calamity do
 
   alias Calamity.Aggregate
   alias Calamity.Command
+  alias Calamity.EventStore
 
-  def dispatch(command, aggregates, listeners) do
+  def dispatch(command, aggregates, event_store) do
     {agg_mod, agg_id} = Command.aggregate(command)
 
     aggregate = Map.get_lazy(aggregates, agg_id, fn ->
@@ -18,16 +19,11 @@ defmodule Calamity do
       |> normalize_events()
 
     new_aggregate = Enum.reduce(events, aggregate, &Aggregate.apply(&2, &1))
+    event_store = Enum.reduce(events, event_store, &EventStore.append(&2, &1))
 
-    Enum.each(events, fn event ->
-      Enum.each(listeners,
-        fn
-          {mod, fun, args} -> apply(mod, fun, args ++ [event])
-          fun when is_function(fun) -> fun.(event)
-        end)
-    end)
+    new_aggregates = Map.put(aggregates, agg_id, new_aggregate)
 
-    Map.put(aggregates, agg_id, new_aggregate)
+    {new_aggregates, event_store}
   end
 
   defp normalize_events(nil), do: []
