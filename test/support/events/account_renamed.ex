@@ -3,8 +3,4 @@ defmodule Calamity.Events.AccountRenamed do
     :account_id,
     :name
   ]
-
-  defimpl Calamity.Event do
-
-  end
 end

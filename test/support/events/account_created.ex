@@ -3,8 +3,4 @@ defmodule Calamity.Events.AccountCreated do
     :account_id,
     :balance
   ]
-
-  defimpl Calamity.Event do
-
-  end
 end
