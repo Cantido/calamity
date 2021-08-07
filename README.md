@@ -1,6 +1,8 @@
 # Calamity
 
-Protocols defining CQRS/ES behaviors.
+An event-sourcing library with a focus on pure functions and protocols.
+
+This project is in the experimental stage; do not use it in production.
 
 ## Installation
 
