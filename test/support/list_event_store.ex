@@ -21,4 +21,21 @@ defmodule Calamity.ListEventStore do
       %{store | subscribers: [pid | store.subscribers]}
     end
   end
+
+  defimpl Collectable do
+    def into(event_store) do
+      collector_fun = fn
+        event_store_acc, {:cont, elem} ->
+          Calamity.EventStore.append(event_store_acc, elem)
+
+        event_store_acc, :done ->
+          event_store_acc
+
+        _event_store_acc, :halt ->
+          :ok
+      end
+
+      {event_store, collector_fun}
+    end
+  end
 end

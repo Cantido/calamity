@@ -50,7 +50,7 @@ defmodule Calamity do
         }
       end)
 
-    event_store = Enum.reduce(events, event_store, &EventStore.append(&2, &1))
+    event_store = Enum.into(events, event_store)
 
     Enum.reduce(new_commands, {new_aggregates, new_process_managers, event_store}, fn new_command, {aggs, pms, es} ->
       dispatch(new_command, aggs, pms, es)
