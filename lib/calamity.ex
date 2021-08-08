@@ -8,6 +8,17 @@ defmodule Calamity do
 
   require Logger
 
+  @doc """
+  Executes a command, and return the updated aggregates, process managers, and event store.
+
+  Calamity is protocol-driven, which means that all arguments to this function only need to implement the correct protocols.
+
+  - `command` must implement `Calamity.Command`
+  - `aggregates` must implement `Access`, and contain structs implementing `Calamity.Aggregate`
+  - `process_manager_modules` must implement `Enumerable` and contain modules
+  - `process_managers` must implement `Access` at two levels
+  - `event_store` must implement `Calamity.EventStore` and `Collectable`
+  """
   def dispatch(command, aggregates, process_manager_modules, process_managers, event_store) do
     Logger.debug("Processing command #{inspect command, pretty: true}")
 
