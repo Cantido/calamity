@@ -5,7 +5,6 @@ defmodule Calamity do
 
   alias Calamity.Aggregate
   alias Calamity.Command
-  alias Calamity.EventStore
 
   def dispatch(command, aggregates, process_managers, event_store) do
     {agg_mod, agg_id} = Command.aggregate(command)
