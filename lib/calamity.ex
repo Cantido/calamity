@@ -10,7 +10,7 @@ defmodule Calamity do
   def dispatch(command, aggregates, process_managers, event_store) do
     {agg_mod, agg_id} = Command.aggregate(command)
 
-    aggregate = Map.get(aggregates, agg_id, struct!(agg_mod))
+    aggregate = Map.get(aggregates, agg_id, agg_mod.new(agg_id))
 
     events =
       Aggregate.execute(aggregate, command)
