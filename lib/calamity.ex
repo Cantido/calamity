@@ -45,7 +45,7 @@ defmodule Calamity do
         {new_commands, new_process_managers} =
           Access.get_and_update(process_managers, mod, fn
             nil ->
-              {[], :pop}
+              Calamity.ProcessManager.Base.handle_event(mod, %{}, event)
             pms_for_mod ->
               Calamity.ProcessManager.Base.handle_event(mod, pms_for_mod, event)
           end)
