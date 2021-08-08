@@ -10,14 +10,29 @@ defmodule Calamity do
   def dispatch(command, aggregates, process_managers, event_store) do
     {agg_mod, agg_id} = Command.aggregate(command)
 
-    aggregate = Map.get(aggregates, agg_id, agg_mod.new(agg_id))
+    {events, new_aggregates} =
+      Access.get_and_update(aggregates, agg_id,
+        fn
+          nil ->
+            aggregate = agg_mod.new(agg_id)
 
-    events =
-      Aggregate.execute(aggregate, command)
-      |> normalize_to_list()
+            events =
+              Aggregate.execute(aggregate, command)
+              |> normalize_to_list()
 
-    new_aggregate = Enum.reduce(events, aggregate, &Aggregate.apply(&2, &1))
+            new_aggregate = Enum.reduce(events, aggregate, &Aggregate.apply(&2, &1))
 
+            {events, new_aggregate}
+          aggregate ->
+            events =
+              Aggregate.execute(aggregate, command)
+              |> normalize_to_list()
+
+            new_aggregate = Enum.reduce(events, aggregate, &Aggregate.apply(&2, &1))
+
+            {events, new_aggregate}
+          end
+      )
 
     %{pm_map: new_process_managers, commands: new_commands} =
       combinations(events, process_managers)
@@ -35,7 +50,6 @@ defmodule Calamity do
         }
       end)
 
-    new_aggregates = Map.put(aggregates, agg_id, new_aggregate)
     event_store = Enum.reduce(events, event_store, &EventStore.append(&2, &1))
 
     Enum.reduce(new_commands, {new_aggregates, new_process_managers, event_store}, fn new_command, {aggs, pms, es} ->
