@@ -10,6 +10,7 @@ defmodule CalamityTest do
     Calamity.dispatch(
       %Calamity.Commands.CreateAccount{account_id: "1"},
       %{},
+      [],
       %{},
       store
     )
@@ -26,6 +27,7 @@ defmodule CalamityTest do
     Calamity.dispatch(
       %Calamity.Commands.RenameAccount{account_id: "1", name: "New account name"},
       %{"1" => %Calamity.BankAccount{account_id: "1", name: "Old account name", balance: 100}},
+      [],
       %{},
       store
     )
@@ -45,6 +47,7 @@ defmodule CalamityTest do
         "1" => %Calamity.BankAccount{account_id: "1", name: "From account", balance: 100},
         "2" => %Calamity.BankAccount{account_id: "2", name: "To account", balance: 0}
       },
+      [Calamity.ProcessManagers.Transfer],
       %{Calamity.ProcessManagers.Transfer => %{}},
       store
       )

@@ -30,7 +30,7 @@ defmodule Calamity.BankAccount do
       account.account_id
     end
 
-    def execute(%{account_id: nil}, %CreateAccount{account_id: account_id}) do
+    def execute(%{account_id: account_id}, %CreateAccount{account_id: account_id}) do
       %AccountCreated{account_id: account_id, balance: 0}
     end
 
@@ -51,6 +51,7 @@ defmodule Calamity.BankAccount do
         %FundsWithdrawn{
           account_id: account.account_id,
           amount: amount,
+          balance: account.balance - amount,
           transfer_id: transfer_id
         }
       else

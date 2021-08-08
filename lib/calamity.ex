@@ -6,7 +6,11 @@ defmodule Calamity do
   alias Calamity.Aggregate
   alias Calamity.Command
 
-  def dispatch(command, aggregates, process_managers, event_store) do
+  require Logger
+
+  def dispatch(command, aggregates, process_manager_modules, process_managers, event_store) do
+    Logger.debug("Processing command #{inspect command, pretty: true}")
+
     {agg_mod, agg_id} = Command.aggregate(command)
 
     {events, new_aggregates} =
@@ -33,26 +37,28 @@ defmodule Calamity do
           end
       )
 
-    %{pm_map: new_process_managers, commands: new_commands} =
-      combinations(events, process_managers)
-      |> Enum.map(fn {event, {mod, pms}} ->
-        Task.Supervisor.async(Calamity.ProcessManager.TaskSupervisor, fn ->
-          {pms, new_commands} = Calamity.ProcessManager.Base.handle_event(mod, pms, event)
-          {mod, pms, new_commands}
-        end)
+    Logger.debug("Aggregate emitted events #{inspect events, pretty: true}")
+
+    {new_commands, new_process_managers} =
+      combinations(events, process_manager_modules)
+      |> Enum.reduce({[], process_managers}, fn {event, mod}, {commands, process_managers} ->
+        {new_commands, new_process_managers} =
+          Access.get_and_update(process_managers, mod, fn
+            nil ->
+              {[], :pop}
+            pms_for_mod ->
+              Calamity.ProcessManager.Base.handle_event(mod, pms_for_mod, event)
+          end)
+
+        {normalize_to_list(new_commands) ++ commands, new_process_managers}
       end)
-      |> Task.await_many()
-      |> Enum.reduce(%{pm_map: %{}, commands: []}, fn {mod, pms, new_commands}, %{pm_map: pm_map, commands: commands} ->
-        %{
-          pm_map: Map.put(pm_map, mod, pms),
-          commands: normalize_to_list(new_commands) ++ commands
-        }
-      end)
+
+    Logger.debug("Process managers emitted commands #{inspect new_commands, pretty: true}")
 
     event_store = Enum.into(events, event_store)
 
     Enum.reduce(new_commands, {new_aggregates, new_process_managers, event_store}, fn new_command, {aggs, pms, es} ->
-      dispatch(new_command, aggs, pms, es)
+      dispatch(new_command, aggs, process_manager_modules, pms, es)
     end)
   end
 

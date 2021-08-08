@@ -12,8 +12,7 @@ defmodule Calamity.ProcessManager.Base do
         :stop -> Map.delete(pms, id)
       end
 
-    {commands, pms} =
-      Access.get_and_update(pms, id,
+    Access.get_and_update(pms, id,
       fn
         nil ->
           {[], :pop}
@@ -22,7 +21,5 @@ defmodule Calamity.ProcessManager.Base do
           commands = Calamity.ProcessManager.handle(pm, event)
           {commands, pm}
       end)
-
-    {pms, commands}
   end
 end
