@@ -22,7 +22,7 @@ defmodule Calamity do
     %{pm_map: new_process_managers, commands: new_commands} =
       combinations(events, process_managers)
       |> Enum.map(fn {event, {mod, pms}} ->
-        Task.async(fn ->
+        Task.Supervisor.async(Calamity.ProcessManager.TaskSupervisor, fn ->
           {pms, new_commands} = Calamity.ProcessManager.Base.handle_event(mod, pms, event)
           {mod, pms, new_commands}
         end)
