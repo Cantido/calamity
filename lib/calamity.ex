@@ -20,16 +20,19 @@ defmodule Calamity do
 
 
     %{pm_map: new_process_managers, commands: new_commands} =
-      Enum.reduce(events, %{pm_map: %{}, commands: []}, fn event, results_map ->
-        Enum.reduce(process_managers, results_map, fn {mod, pms},  %{pm_map: pm_map, commands: commands} ->
-
+      combinations(events, process_managers)
+      |> Enum.map(fn {event, {mod, pms}} ->
+        Task.async(fn ->
           {pms, new_commands} = Calamity.ProcessManager.Base.handle_event(mod, pms, event)
-
-          %{
-            pm_map: Map.put(pm_map, mod, pms),
-            commands: normalize_to_list(new_commands) ++ commands
-          }
+          {mod, pms, new_commands}
         end)
+      end)
+      |> Task.await_many()
+      |> Enum.reduce(%{pm_map: %{}, commands: []}, fn {mod, pms, new_commands}, %{pm_map: pm_map, commands: commands} ->
+        %{
+          pm_map: Map.put(pm_map, mod, pms),
+          commands: normalize_to_list(new_commands) ++ commands
+        }
       end)
 
     new_aggregates = Map.put(aggregates, agg_id, new_aggregate)
@@ -37,6 +40,14 @@ defmodule Calamity do
 
     Enum.reduce(new_commands, {new_aggregates, new_process_managers, event_store}, fn new_command, {aggs, pms, es} ->
       dispatch(new_command, aggs, pms, es)
+    end)
+  end
+
+  defp combinations(a, b) do
+    Enum.flat_map(a, fn a_elem ->
+      Enum.map(b, fn b_elem ->
+        {a_elem, b_elem}
+      end)
     end)
   end
 
