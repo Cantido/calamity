@@ -1,4 +1,6 @@
 defmodule Calamity.ProcessManagers.Transfer do
+  use Calamity, :process_manager
+
   alias Calamity.Commands.{
     DepositFunds,
     WithdrawFunds

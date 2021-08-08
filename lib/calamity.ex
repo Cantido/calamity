@@ -43,4 +43,20 @@ defmodule Calamity do
   defp normalize_to_list(nil), do: []
   defp normalize_to_list(items) when is_list(items), do: items
   defp normalize_to_list(item), do: [item]
+
+  def aggregate do
+    quote do
+      @behaviour Calamity.Aggregate.Base
+    end
+  end
+
+  def process_manager do
+    quote do
+      @behaviour Calamity.ProcessManager.Base
+    end
+  end
+
+  defmacro __using__(which) when is_atom(which) do
+    apply(__MODULE__, which, [])
+  end
 end

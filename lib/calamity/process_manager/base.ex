@@ -1,6 +1,6 @@
 defmodule Calamity.ProcessManager.Base do
   @callback interested?(any()) :: {:start, any()} | {:continue, any()} | {:stop, any()}
-  @callback new(any()) :: any()
+  @callback new(any()) :: Calamity.ProcessManager.t()
 
   def handle_event(mod, pms, event) do
     {interest, id} = mod.interested?(event)

@@ -1,4 +1,6 @@
 defmodule Calamity.BankAccount do
+  use Calamity, :aggregate
+
   alias Calamity.Commands.{
     CreateAccount,
     RenameAccount,
@@ -18,6 +20,10 @@ defmodule Calamity.BankAccount do
     :balance,
     :name
   ]
+
+  def new(id) do
+    %__MODULE__{account_id: id}
+  end
 
   defimpl Calamity.Aggregate  do
     def id(account) do
