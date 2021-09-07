@@ -2,7 +2,7 @@
 
 *WARNING*: These examples are subject to a lot of change while this library is under development.
 
-## Building your own aggreate and process manager stores. 
+## Building your own aggregate and process manager stores. 
 
 Calamity delegates all impure functionality to its users.
 This means that Calamity does not start its own processes,
