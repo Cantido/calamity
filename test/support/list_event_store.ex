@@ -1,8 +1,6 @@
 defmodule Calamity.ListEventStore do
-  defstruct [
-    events: [],
-    subscribers: []
-  ]
+  defstruct events: [],
+            subscribers: []
 
   defimpl Calamity.EventStore do
     def append(store, event) do

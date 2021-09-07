@@ -8,6 +8,7 @@ defmodule Calamity.BankAccount do
     WithdrawFunds,
     RequestTransfer
   }
+
   alias Calamity.Events.{
     AccountCreated,
     AccountRenamed,
@@ -15,6 +16,7 @@ defmodule Calamity.BankAccount do
     FundsDeposited,
     TransferInitiated
   }
+
   defstruct [
     :account_id,
     :balance,
@@ -25,7 +27,7 @@ defmodule Calamity.BankAccount do
     %__MODULE__{account_id: id}
   end
 
-  defimpl Calamity.Aggregate  do
+  defimpl Calamity.Aggregate do
     def id(account) do
       account.account_id
     end

@@ -20,35 +20,34 @@ defmodule Calamity do
   - `event_store` must implement `Calamity.EventStore` and `Collectable`
   """
   def dispatch(command, aggregates, process_manager_modules, process_managers, event_store) do
-    Logger.debug("Processing command #{inspect command, pretty: true}")
+    Logger.debug("Processing command #{inspect(command, pretty: true)}")
 
     {agg_mod, agg_id} = Command.aggregate(command)
 
     {events, new_aggregates} =
-      Access.get_and_update(aggregates, agg_id,
-        fn
-          nil ->
-            aggregate = agg_mod.new(agg_id)
+      Access.get_and_update(aggregates, agg_id, fn
+        nil ->
+          aggregate = agg_mod.new(agg_id)
 
-            events =
-              Aggregate.execute(aggregate, command)
-              |> normalize_to_list()
+          events =
+            Aggregate.execute(aggregate, command)
+            |> normalize_to_list()
 
-            new_aggregate = Enum.reduce(events, aggregate, &Aggregate.apply(&2, &1))
+          new_aggregate = Enum.reduce(events, aggregate, &Aggregate.apply(&2, &1))
 
-            {events, new_aggregate}
-          aggregate ->
-            events =
-              Aggregate.execute(aggregate, command)
-              |> normalize_to_list()
+          {events, new_aggregate}
 
-            new_aggregate = Enum.reduce(events, aggregate, &Aggregate.apply(&2, &1))
+        aggregate ->
+          events =
+            Aggregate.execute(aggregate, command)
+            |> normalize_to_list()
 
-            {events, new_aggregate}
-          end
-      )
+          new_aggregate = Enum.reduce(events, aggregate, &Aggregate.apply(&2, &1))
 
-    Logger.debug("Aggregate emitted events #{inspect events, pretty: true}")
+          {events, new_aggregate}
+      end)
+
+    Logger.debug("Aggregate emitted events #{inspect(events, pretty: true)}")
 
     {new_commands, new_process_managers} =
       combinations(events, process_manager_modules)
@@ -57,6 +56,7 @@ defmodule Calamity do
           Access.get_and_update(process_managers, mod, fn
             nil ->
               Calamity.ProcessManager.Base.handle_event(mod, %{}, event)
+
             pms_for_mod ->
               Calamity.ProcessManager.Base.handle_event(mod, pms_for_mod, event)
           end)
@@ -64,11 +64,13 @@ defmodule Calamity do
         {normalize_to_list(new_commands) ++ commands, new_process_managers}
       end)
 
-    Logger.debug("Process managers emitted commands #{inspect new_commands, pretty: true}")
+    Logger.debug("Process managers emitted commands #{inspect(new_commands, pretty: true)}")
 
     event_store = Enum.into(events, event_store)
 
-    Enum.reduce(new_commands, {new_aggregates, new_process_managers, event_store}, fn new_command, {aggs, pms, es} ->
+    Enum.reduce(new_commands, {new_aggregates, new_process_managers, event_store}, fn new_command,
+                                                                                      {aggs, pms,
+                                                                                       es} ->
       dispatch(new_command, aggs, process_manager_modules, pms, es)
     end)
   end
