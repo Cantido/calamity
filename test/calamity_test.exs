@@ -1,5 +1,5 @@
 defmodule CalamityTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   doctest Calamity
 
   test "dispatch with no matching aggregate" do
