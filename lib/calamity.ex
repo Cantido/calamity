@@ -89,13 +89,13 @@ defmodule Calamity do
 
   def aggregate do
     quote do
-      @behaviour Calamity.Aggregate.Base
+      use Calamity.Aggregate.Base
     end
   end
 
   def process_manager do
     quote do
-      @behaviour Calamity.ProcessManager.Base
+      use Calamity.ProcessManager.Base
     end
   end
 

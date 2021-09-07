@@ -37,4 +37,15 @@ defmodule Calamity.ProcessManager.Base do
         {commands, pm}
     end)
   end
+
+  defmacro __using__(_opts) do
+    quote do
+      @behaviour Calamity.ProcessManager.Base
+      @after_compile __MODULE__
+
+      defmacro __after_compile__(_env, _bytecode) do
+        Protocol.assert_impl!(Calamity.ProcessManager, __MODULE__)
+      end
+    end
+  end
 end
