@@ -1,5 +1,9 @@
 # Calamity
 
+[![builds.sr.ht status](https://builds.sr.ht/~cosmicrose/calamity.svg)](https://builds.sr.ht/~cosmicrose/calamity)
+[![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg)](https://github.com/RichardLitt/standard-readme)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md)
+
 An event-sourcing library with a focus on pure functions and protocols.
 
 Calamity is structured similarly to Commanded,
@@ -14,29 +18,8 @@ This project is in the experimental stage; do not use it in production.
 ## Usage
 
 Using Calamity means implementing a few protocols and behaviors.
-See `test/support` for an example.
+See `test/support` for a simplified example of how to use this library in a single process.
 
-### Event Stores
-
-To create an event store, you must implement `Calamity.EventStore` and `Collectible`.
-The `Calamity.EventStore` behavior defines the basics of subscribing to events,
-and `Collectable` is used to insert new events into the store.
-
-```elixir
-defmodule Calamity.ListEventStore do
-  defstruct [
-    ...
-  ]
-
-  defimpl Calamity.EventStore do
-    ...
-  end
-
-  defimpl Collectable do
-    ...
-  end
-end
-```
 ### Aggregates
 
 To create an aggregate, `use` the `:aggregate` macro available in the main `Calamity` module,
@@ -67,6 +50,10 @@ Aggregates must be accessed by ID and return a struct implementing the `Calamity
 
 Calamity uses `Access.get_and_update/3` to transactionally update the aggregate in the store and return events.
 This means that Calamity supports aggregates stored in GenServers as well as simple maps.
+
+Read [`guides/plugins.md`](guides/plugins.md) for examples of aggregate and process manager stores,
+as well as an over-simplified list store for events.
+
 
 ### Events
 
@@ -116,7 +103,7 @@ defmodule MyApp.ProcessManagers.Transfer do
   def interested?(event) do
     ...
   end
-  
+
   defimpl Calamity.ProcessManager do
     ...
   end
@@ -140,6 +127,9 @@ If you were to use `Map`s, the process manager store would look like this:
 
 Calamity uses `Access.get_and_update/3` to transactionally update the process manager store and return commands.
 This means that Calamity supports process managers stored in GenServers as well as simple maps.
+
+Read [`guides/plugins.md`](guides/plugins.md) for examples of aggregate and process manager stores,
+as well as an over-simplified list store for events.
 
 ### Dispatching Events
 
@@ -180,12 +170,52 @@ This will return a tuple containing the updated aggregate store, the updated pro
 {new_aggregates, new_process_managers, event_store}
 ```
 
-## Building on Calamity
+This library does not implement its own event store or aggregate store.
+If you're just getting started, use maps like in the examples, and wrap calls in a `GenServer` to ensure sequential access.
 
-Calamity delegates all impure functionality to its users.
-This means that Calamity does not start its own processes, and does not take responsibility for protecting the aggregate store and process manager store from concurrent access.
-The simplest solution to this problem is to use maps for these stores,
-and to wrap calls to `Calamity.dispatch/5` in a `GenServer`.
-More complicated setups can use individual GenServers for each aggregate and process manager,
-with the stores being maps of process IDs,
-and the store struct implementing `Access` to delegate calls to the respective GenServer.
+Read [`guides/plugins.md`](guides/plugins.md) for examples of aggregate and process manager stores,
+as well as an over-simplified list store for events.
+
+## Maintainer
+
+This project was developed by [Rosa Richter](https://about.me/rosa.richter).
+You can get in touch with her on [Keybase.io](https://keybase.io/cantido).
+
+## Contributing
+
+Questions and pull requests are more than welcome.
+I follow Elixir's tenet of bad documentation being a bug,
+so if anything is unclear, please [file an issue](https://todo.sr.ht/~cosmicrose/calamity) or ask on the [mailing list]!
+Ideally, my answer to your question will be in an update to the docs.
+
+Please see [CONTRIBUTING.md](CONTRIBUTING.md) for all the details you could ever want about helping me with this project.
+
+Note that this project is released with a Contributor [Code of Conduct].
+By participating in this project you agree to abide by its terms.
+
+## License
+
+MIT License
+
+Copyright 2021 Rosa Richter
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+[Code of Conduct]: code_of_conduct.md
+[mailing list]: https://lists.sr.ht/~cosmicrose/calamity
