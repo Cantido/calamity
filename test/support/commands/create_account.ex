@@ -1,11 +1,6 @@
 defmodule Calamity.Commands.CreateAccount do
+  @derive {Calamity.Command, mod: Calamity.BankAccount, key: :account_id}
   defstruct [
     :account_id
   ]
-
-  defimpl Calamity.Command do
-    def aggregate(command) do
-      {Calamity.BankAccount, command.account_id}
-    end
-  end
 end
