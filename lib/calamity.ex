@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2021 Rosa Richter
+#
+# SPDX-License-Identifier: MIT
+
 defmodule Calamity do
   @moduledoc """
   Documentation for `Calamity`.

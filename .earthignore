@@ -1,6 +1,7 @@
-.git
-.github
+# SPDX-FileCopyrightText: 2021 Rosa Richter
+#
+# SPDX-License-Identifier: CC0-1.0
+
 _build
 deps
-*.md
-guides
+.elixir_ls

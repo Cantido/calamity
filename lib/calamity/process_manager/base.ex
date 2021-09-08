@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2021 Rosa Richter
+#
+# SPDX-License-Identifier: MIT
+
 defmodule Calamity.ProcessManager.Base do
   @moduledoc """
   Base module for Calamity's process managers.

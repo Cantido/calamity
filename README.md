@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2021 Rosa Richter
+
+SPDX-License-Identifier: MIT
+-->
+
 # Calamity
 
 [![builds.sr.ht status](https://builds.sr.ht/~cosmicrose/calamity.svg)](https://builds.sr.ht/~cosmicrose/calamity)

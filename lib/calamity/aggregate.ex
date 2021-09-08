@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2021 Rosa Richter
+#
+# SPDX-License-Identifier: MIT
+
 defprotocol Calamity.Aggregate do
   @moduledoc """
   The core business logic of part of a domain.

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2021 Rosa Richter
+#
+# SPDX-License-Identifier: MIT
+
 defmodule Calamity.Commands.WithdrawFunds do
   defstruct [
     :account_id,

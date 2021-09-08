@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2021 Rosa Richter
+#
+# SPDX-License-Identifier: MIT
+
 defprotocol Calamity.Event do
   @moduledoc """
   An artifact of change.

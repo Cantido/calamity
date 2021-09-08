@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2021 Rosa Richter
+
+SPDX-License-Identifier: MIT
+-->
+
 # Plugins for Calamity
 
 *WARNING*: These examples are subject to a lot of change while this library is under development.

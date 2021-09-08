@@ -1,7 +1,12 @@
+# SPDX-FileCopyrightText: 2021 Rosa Richter
+#
+# SPDX-License-Identifier: MIT
+
 ARG MIX_ENV=dev
 
 all:
   BUILD +lint
+  BUILD +lint-copyright
   BUILD +test
 
 get-deps:
@@ -33,6 +38,18 @@ lint:
   FROM +build
 
   RUN MIX_ENV=$MIX_ENV mix credo list
+
+lint-copyright:
+  FROM fsfe/reuse
+
+  COPY . .
+
+  RUN reuse lint
+
+sast:
+  FROM +build
+
+  RUN MIX_ENV=$MIX_ENV mix sobelow --skip
 
 test:
   FROM --build-arg MIX_ENV=test +build
