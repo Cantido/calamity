@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-defmodule Calamity.ListEventStore do
+defmodule Calamity.EventStore.ListEventStore do
   defstruct events: [],
             subscribers: []
 

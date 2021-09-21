@@ -8,7 +8,7 @@ defmodule CalamityTest do
 
   test "dispatch with no matching aggregate" do
     store =
-      %Calamity.ListEventStore{}
+      %Calamity.EventStore.ListEventStore{}
       |> Calamity.EventStore.subscribe(self())
 
     Calamity.dispatch(
@@ -25,7 +25,7 @@ defmodule CalamityTest do
 
   test "dispatch with matching aggregate" do
     store =
-      %Calamity.ListEventStore{}
+      %Calamity.EventStore.ListEventStore{}
       |> Calamity.EventStore.subscribe(self())
 
     Calamity.dispatch(
@@ -42,7 +42,7 @@ defmodule CalamityTest do
 
   test "dispatch with process manager" do
     store =
-      %Calamity.ListEventStore{}
+      %Calamity.EventStore.ListEventStore{}
       |> Calamity.EventStore.subscribe(self())
 
     Calamity.dispatch(
