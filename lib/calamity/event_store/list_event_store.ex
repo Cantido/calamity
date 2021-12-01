@@ -3,41 +3,49 @@
 # SPDX-License-Identifier: MIT
 
 defmodule Calamity.EventStore.ListEventStore do
-  defstruct events: [],
-            subscribers: []
+  alias Calamity.EventMetadata
+
+  defstruct streams: %{},
+            subscribers: %{}
 
   defimpl Calamity.EventStore do
-    def append(store, event) do
-      Enum.each(store.subscribers, fn subscriber ->
-        send(subscriber, {:events, [event]})
+    def append(store, stream_id, events, _opts) do
+      Map.get(store.subscribers, stream_id, [])
+      |> Enum.each(fn subscriber ->
+        Process.send(subscriber, {:events, events}, [])
       end)
 
-      %{store | events: store.events ++ [event]}
+      new_events =
+        Enum.map(events, fn event ->
+          {event, %Calamity.EventMetadata{created_at: DateTime.utc_now()}}
+        end)
+
+      updated_streams =
+        store.streams
+        |> Map.put_new(stream_id, [])
+        |> Map.update!(stream_id, fn previous_events -> previous_events ++ new_events end)
+
+      %{store | streams: updated_streams}
     end
 
-    def all(store) do
-      store.events
+    def stream(store, :all, _opts) do
+      Map.values(store.streams)
+      |> Enum.concat()
+      |> Enum.sort_by(fn {_event, metadata} ->
+        metadata.created_at
+      end,
+      DateTime)
     end
 
-    def subscribe(store, pid) do
-      %{store | subscribers: [pid | store.subscribers]}
+    def stream(store, stream_id, _opts) do
+      Map.get(store.streams, stream_id, [])
     end
-  end
 
-  defimpl Collectable do
-    def into(event_store) do
-      collector_fun = fn
-        event_store_acc, {:cont, elem} ->
-          Calamity.EventStore.append(event_store_acc, elem)
+    def subscribe(store, stream_id, pid) do
+      new_subscribers =
+        Map.update(store.subscribers, stream_id, [pid], &[pid | &1])
 
-        event_store_acc, :done ->
-          event_store_acc
-
-        _event_store_acc, :halt ->
-          :ok
-      end
-
-      {event_store, collector_fun}
+      %{store | subscribers: new_subscribers}
     end
   end
 end

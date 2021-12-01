@@ -9,7 +9,7 @@ defmodule CalamityTest do
   test "dispatch with no matching aggregate" do
     store =
       %Calamity.EventStore.ListEventStore{}
-      |> Calamity.EventStore.subscribe(self())
+      |> Calamity.EventStore.subscribe(:all, self())
 
     Calamity.dispatch(
       %Calamity.Commands.CreateAccount{account_id: "1"},
@@ -26,7 +26,7 @@ defmodule CalamityTest do
   test "dispatch with matching aggregate" do
     store =
       %Calamity.EventStore.ListEventStore{}
-      |> Calamity.EventStore.subscribe(self())
+      |> Calamity.EventStore.subscribe(:all, self())
 
     Calamity.dispatch(
       %Calamity.Commands.RenameAccount{account_id: "1", name: "New account name"},
@@ -43,7 +43,7 @@ defmodule CalamityTest do
   test "dispatch with process manager" do
     store =
       %Calamity.EventStore.ListEventStore{}
-      |> Calamity.EventStore.subscribe(self())
+      |> Calamity.EventStore.subscribe(:all, self())
 
     Calamity.dispatch(
       %Calamity.Commands.RequestTransfer{

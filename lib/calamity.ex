@@ -70,7 +70,7 @@ defmodule Calamity do
 
     Logger.debug("Process managers emitted commands #{inspect(new_commands, pretty: true)}")
 
-    event_store = Enum.into(events, event_store)
+    event_store = Calamity.EventStore.append(event_store, :all, events)
 
     Enum.reduce(new_commands, {new_aggregates, new_process_managers, event_store}, fn new_command,
                                                                                       {aggs, pms,
