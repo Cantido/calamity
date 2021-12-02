@@ -17,7 +17,7 @@ defmodule Calamity.EventStore.ListEventStore do
 
       new_events =
         Enum.map(events, fn event ->
-          {event, %Calamity.EventMetadata{created_at: DateTime.utc_now()}}
+          {event, %EventMetadata{created_at: DateTime.utc_now()}}
         end)
 
       updated_streams =
