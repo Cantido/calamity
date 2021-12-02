@@ -28,3 +28,5 @@ calamity-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+.tmp-earthly-out

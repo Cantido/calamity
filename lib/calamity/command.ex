@@ -15,9 +15,9 @@ defprotocol Calamity.Command do
       end
 
   Or take a shortcut with `@derive`:
-      
+
       @derive {Calamity.Command, mod: MyAggregate, key: :id}
-     
+
   """
 
   @doc """

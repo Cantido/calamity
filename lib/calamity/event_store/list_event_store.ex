@@ -3,6 +3,10 @@
 # SPDX-License-Identifier: MIT
 
 defmodule Calamity.EventStore.ListEventStore do
+  @moduledoc """
+  A simple in-memory event store.
+  """
+
   alias Calamity.EventMetadata
 
   defstruct streams: %{},
