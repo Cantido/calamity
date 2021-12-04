@@ -8,13 +8,6 @@ defmodule Calamity.Stack do
   This object contains all the stores and metadata necessary for command dispatch.
   """
 
-  @enforce_keys [
-    :aggregate_store,
-    :aggregate_versions,
-    :event_store,
-    :process_manager_mods,
-    :process_manager_store
-  ]
   defstruct aggregate_store: %{},
             aggregate_versions: %{},
             event_store: %Calamity.EventStore.ListEventStore{},

@@ -9,6 +9,7 @@ defmodule Calamity do
 
   alias Calamity.Aggregate
   alias Calamity.Command
+  alias Calamity.Stack
 
   require Logger
 
@@ -23,13 +24,13 @@ defmodule Calamity do
   - `process_managers` must implement `Access` at two levels
   - `event_store` must implement `Calamity.EventStore` and `Collectable`
   """
-  def dispatch(command, aggregates, process_manager_modules, process_managers, event_store) do
+  def dispatch(stack, command) do
     Logger.debug("Processing command #{inspect(command, pretty: true)}")
 
     {agg_mod, agg_id} = Command.aggregate(command)
 
     {events, new_aggregates} =
-      Access.get_and_update(aggregates, agg_id, fn
+      Access.get_and_update(stack.aggregate_store, agg_id, fn
         nil ->
           aggregate = agg_mod.new(agg_id)
 
@@ -54,8 +55,8 @@ defmodule Calamity do
     Logger.debug("Aggregate emitted events #{inspect(events, pretty: true)}")
 
     {new_commands, new_process_managers} =
-      combinations(events, process_manager_modules)
-      |> Enum.reduce({[], process_managers}, fn {event, mod}, {commands, process_managers} ->
+      combinations(events, stack.process_manager_mods)
+      |> Enum.reduce({[], stack.process_manager_store}, fn {event, mod}, {commands, process_managers} ->
         {new_commands, new_process_managers} =
           Access.get_and_update(process_managers, mod, fn
             nil ->
@@ -70,12 +71,16 @@ defmodule Calamity do
 
     Logger.debug("Process managers emitted commands #{inspect(new_commands, pretty: true)}")
 
-    event_store = Calamity.EventStore.append(event_store, :all, events)
+    event_store = Calamity.EventStore.append(stack.event_store, :all, events)
 
-    Enum.reduce(new_commands, {new_aggregates, new_process_managers, event_store}, fn new_command,
-                                                                                      {aggs, pms,
-                                                                                       es} ->
-      dispatch(new_command, aggs, process_manager_modules, pms, es)
+    stack = %Stack{ stack |
+      aggregate_store: new_aggregates,
+      process_manager_store: new_process_managers,
+      event_store: event_store
+    }
+
+    Enum.reduce(new_commands, stack, fn new_command, stack ->
+      dispatch(stack, new_command)
     end)
   end
 

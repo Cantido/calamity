@@ -11,12 +11,13 @@ defmodule CalamityTest do
       %Calamity.EventStore.ListEventStore{}
       |> Calamity.EventStore.subscribe(:all, self())
 
+    stack = %Calamity.Stack{
+      event_store: store
+    }
+
     Calamity.dispatch(
-      %Calamity.Commands.CreateAccount{account_id: "1"},
-      %{},
-      [],
-      %{},
-      store
+      stack,
+      %Calamity.Commands.CreateAccount{account_id: "1"}
     )
 
     assert_receive {:events, [event]}
@@ -28,12 +29,14 @@ defmodule CalamityTest do
       %Calamity.EventStore.ListEventStore{}
       |> Calamity.EventStore.subscribe(:all, self())
 
+    stack = %Calamity.Stack{
+      event_store: store,
+      aggregate_store: %{"1" => %Calamity.BankAccount{account_id: "1", name: "Old account name", balance: 100}}
+    }
+
     Calamity.dispatch(
-      %Calamity.Commands.RenameAccount{account_id: "1", name: "New account name"},
-      %{"1" => %Calamity.BankAccount{account_id: "1", name: "Old account name", balance: 100}},
-      [],
-      %{},
-      store
+      stack,
+      %Calamity.Commands.RenameAccount{account_id: "1", name: "New account name"}
     )
 
     assert_receive {:events, [event]}
@@ -45,20 +48,24 @@ defmodule CalamityTest do
       %Calamity.EventStore.ListEventStore{}
       |> Calamity.EventStore.subscribe(:all, self())
 
+    stack = %Calamity.Stack{
+      event_store: store,
+      aggregate_store: %{
+        "1" => %Calamity.BankAccount{account_id: "1", name: "From account", balance: 100},
+        "2" => %Calamity.BankAccount{account_id: "2", name: "To account", balance: 0}
+      },
+      process_manager_mods: [Calamity.ProcessManagers.Transfer],
+      process_manager_store: %{Calamity.ProcessManagers.Transfer => %{}}
+    }
+
     Calamity.dispatch(
+      stack,
       %Calamity.Commands.RequestTransfer{
         from: "1",
         to: "2",
         amount: 100,
         transfer_id: "asdfasdfasdf"
-      },
-      %{
-        "1" => %Calamity.BankAccount{account_id: "1", name: "From account", balance: 100},
-        "2" => %Calamity.BankAccount{account_id: "2", name: "To account", balance: 0}
-      },
-      [Calamity.ProcessManagers.Transfer],
-      %{Calamity.ProcessManagers.Transfer => %{}},
-      store
+      }
     )
 
     assert_receive {:events,
