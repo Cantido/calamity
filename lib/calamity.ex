@@ -71,7 +71,7 @@ defmodule Calamity do
 
     Logger.debug("Process managers emitted commands #{inspect(new_commands, pretty: true)}")
 
-    event_store = Calamity.EventStore.append(stack.event_store, :all, events)
+    event_store = Calamity.EventStore.append(stack.event_store, agg_id, events)
 
     stack = %Stack{ stack |
       aggregate_store: new_aggregates,

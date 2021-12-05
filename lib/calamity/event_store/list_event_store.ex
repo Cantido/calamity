@@ -14,7 +14,10 @@ defmodule Calamity.EventStore.ListEventStore do
 
   defimpl Calamity.EventStore do
     def append(store, stream_id, events, _opts) do
-      Map.get(store.subscribers, stream_id, [])
+      subs_to_version = Map.get(store.subscribers, stream_id, [])
+      subs_to_all = Map.get(store.subscribers, :all, [])
+
+      Enum.concat(subs_to_version, subs_to_all)
       |> Enum.each(fn subscriber ->
         Process.send(subscriber, {:events, events}, [])
       end)
