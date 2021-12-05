@@ -74,4 +74,22 @@ defmodule CalamityTest do
     assert_receive {:events, [%Calamity.Events.FundsWithdrawn{account_id: "1", amount: 100}]}
     assert_receive {:events, [%Calamity.Events.FundsDeposited{account_id: "2", amount: 100}]}
   end
+
+  test "catches up with the event store" do
+    first = %Calamity.Events.AccountCreated{account_id: "1", balance: 100}
+
+    store =
+      %Calamity.EventStore.ListEventStore{}
+      |> Calamity.EventStore.append("1", [first])
+      |> Calamity.EventStore.subscribe(:all, self())
+
+    stack = %Calamity.Stack{event_store: store}
+
+    stack = Calamity.dispatch(
+      stack,
+      %Calamity.Commands.DepositFunds{account_id: "1", amount: 100}
+    )
+
+    assert stack.aggregate_store["1"].balance == 200
+  end
 end

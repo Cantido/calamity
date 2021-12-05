@@ -44,8 +44,9 @@ defmodule Calamity.EventStore.ListEventStore do
       DateTime)
     end
 
-    def stream(store, stream_id, _opts) do
+    def stream(store, stream_id, opts) do
       Map.get(store.streams, stream_id, [])
+      |> Enum.drop(Keyword.get(opts, :start_version, 0))
     end
 
     def subscribe(store, stream_id, pid) do

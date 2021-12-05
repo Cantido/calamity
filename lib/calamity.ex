@@ -29,10 +29,19 @@ defmodule Calamity do
 
     {agg_mod, agg_id} = Command.aggregate(command)
 
+    agg_version = Access.get(stack.aggregate_versions, agg_id, 0)
+    missed_events =
+      Calamity.EventStore.stream(stack.event_store, agg_id, start_version: agg_version)
+      |> Enum.map(&elem(&1, 0))
+
+    if Enum.count(missed_events) > 0 do
+      Logger.info("Catching up aggregate #{inspect agg_id} with #{Enum.count(missed_events)} new events")
+    end
+
     {events, new_aggregates} =
       Access.get_and_update(stack.aggregate_store, agg_id, fn
         nil ->
-          aggregate = agg_mod.new(agg_id)
+          aggregate = Enum.reduce(missed_events, agg_mod.new(agg_id), &Aggregate.apply(&2, &1))
 
           events =
             Aggregate.execute(aggregate, command)
@@ -43,6 +52,8 @@ defmodule Calamity do
           {events, new_aggregate}
 
         aggregate ->
+          aggregate = Enum.reduce(missed_events, aggregate, &Aggregate.apply(&2, &1))
+
           events =
             Aggregate.execute(aggregate, command)
             |> normalize_to_list()
