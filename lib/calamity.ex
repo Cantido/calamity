@@ -84,7 +84,7 @@ defmodule Calamity do
 
     event_store = Calamity.EventStore.append(stack.event_store, agg_id, events)
 
-    stack = %Stack{ stack |
+    stack = %Stack{stack |
       aggregate_store: new_aggregates,
       process_manager_store: new_process_managers,
       event_store: event_store
