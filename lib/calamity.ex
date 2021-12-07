@@ -22,7 +22,7 @@ defmodule Calamity do
   - `aggregates` must implement `Access`, and contain structs implementing `Calamity.Aggregate`
   - `process_manager_modules` must implement `Enumerable` and contain modules
   - `process_managers` must implement `Access` at two levels
-  - `event_store` must implement `Calamity.EventStore` and `Collectable`
+  - `event_store` must implement `Calamity.EventStore`
   """
   def dispatch(stack, command) do
     Logger.debug("Processing command #{inspect(command, pretty: true)}")
