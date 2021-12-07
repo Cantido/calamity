@@ -15,13 +15,14 @@ defmodule CalamityTest do
       event_store: store
     }
 
-    Calamity.dispatch(
+    stack = Calamity.dispatch(
       stack,
       %Calamity.Commands.CreateAccount{account_id: "1"}
     )
 
     assert_receive {:events, [event]}
-    assert event == %Calamity.Events.AccountCreated{account_id: "1", balance: 0}
+    assert event == %Calamity.Events.AccountCreated{account_id: "1"}
+    assert stack.aggregate_store["1"].balance == 0
   end
 
   test "dispatch with matching aggregate" do
@@ -76,12 +77,13 @@ defmodule CalamityTest do
   end
 
   test "catches up with the event store" do
-    first = %Calamity.Events.AccountCreated{account_id: "1", balance: 100}
+    missed_events = [
+      %Calamity.Events.AccountCreated{account_id: "1"},
+      %Calamity.Events.FundsDeposited{account_id: "1", amount: 100}
+    ]
 
-    store =
-      %Calamity.EventStore.ListEventStore{}
-      |> Calamity.EventStore.append("1", [first])
-      |> Calamity.EventStore.subscribe(:all, self())
+    {:ok, store} = Calamity.EventStore.append(%Calamity.EventStore.ListEventStore{}, "1", missed_events)
+    store = Calamity.EventStore.subscribe(store, :all, self())
 
     stack = %Calamity.Stack{event_store: store}
 

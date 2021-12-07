@@ -22,9 +22,9 @@ defmodule Calamity.BankAccount do
   }
 
   defstruct [
-    :account_id,
-    :balance,
-    :name
+    account_id: nil,
+    balance: 0,
+    name: nil
   ]
 
   def new(id) do
@@ -37,7 +37,7 @@ defmodule Calamity.BankAccount do
     end
 
     def execute(%{account_id: account_id}, %CreateAccount{account_id: account_id}) do
-      %AccountCreated{account_id: account_id, balance: 0}
+      %AccountCreated{account_id: account_id}
     end
 
     def execute(account, %RenameAccount{name: name}) do
@@ -57,7 +57,6 @@ defmodule Calamity.BankAccount do
         %FundsWithdrawn{
           account_id: account.account_id,
           amount: amount,
-          balance: account.balance - amount,
           transfer_id: transfer_id
         }
       else
@@ -78,8 +77,8 @@ defmodule Calamity.BankAccount do
       end
     end
 
-    def apply(account, %Calamity.Events.AccountCreated{balance: balance}) do
-      %{account | balance: balance}
+    def apply(account, %Calamity.Events.AccountCreated{}) do
+      %{account | balance: 0}
     end
 
     def apply(account, %Calamity.Events.AccountRenamed{name: name}) do

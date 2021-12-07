@@ -4,7 +4,6 @@
 
 defmodule Calamity.Events.AccountCreated do
   defstruct [
-    :account_id,
-    :balance
+    :account_id
   ]
 end

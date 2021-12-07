@@ -15,6 +15,12 @@ defprotocol Calamity.EventStore do
   - `expected_version` - used for optimistic concurrency checks. The value can be:
     - a non-negative integer - only append an event if the current version of the stream is this value
     - `:any` (default) - don't check the version of the stream, just append the event
+    - `:no_stream` - assert that the stream does not exist before appending
+
+  ## Return values
+
+  - `{:ok, store}` if the append was successful
+  - `{:error, :stream_exists}` if a stream exists while the `expected_version: :no_stream` option is set
   """
   def append(store, stream_id, events, opts \\ [])
 

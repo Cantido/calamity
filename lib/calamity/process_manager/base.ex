@@ -33,7 +33,7 @@ defmodule Calamity.ProcessManager.Base do
 
     Access.get_and_update(pms, id, fn
       nil ->
-        {[], :pop}
+        :pop
 
       pm ->
         pm = Calamity.ProcessManager.apply(pm, event)
