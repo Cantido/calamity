@@ -61,7 +61,27 @@ defmodule Calamity do
     {agg_mod, agg_id} = Command.aggregate(command)
     agg_version = Access.get(stack.aggregate_versions, agg_id, 0)
 
-    {events, new_aggregates} = update_aggregate(stack, command, agg_mod, agg_id)
+    {events, new_aggregates} =
+      Access.get_and_update(stack.aggregate_store, agg_id, fn
+        nil ->
+          aggregate = agg_mod.new(agg_id)
+          events =
+            Aggregate.execute(aggregate, command)
+            |> normalize_to_list()
+
+          new_aggregate = Enum.reduce(events, aggregate, &Aggregate.apply(&2, &1))
+
+          {events, new_aggregate}
+
+        aggregate ->
+          events =
+            Aggregate.execute(aggregate, command)
+            |> normalize_to_list()
+
+          new_aggregate = Enum.reduce(events, aggregate, &Aggregate.apply(&2, &1))
+
+          {events, new_aggregate}
+      end)
 
     expected_version = if agg_version == 0, do: :no_stream, else: agg_version
 
@@ -80,29 +100,6 @@ defmodule Calamity do
         |> sync_aggregate(agg_mod, agg_id)
         |> execute(command)
     end
-  end
-
-  defp update_aggregate(stack, command, agg_mod, agg_id) do
-    Access.get_and_update(stack.aggregate_store, agg_id, fn
-      nil ->
-        aggregate = agg_mod.new(agg_id)
-        events =
-          Aggregate.execute(aggregate, command)
-          |> normalize_to_list()
-
-        new_aggregate = Enum.reduce(events, aggregate, &Aggregate.apply(&2, &1))
-
-        {events, new_aggregate}
-
-      aggregate ->
-        events =
-          Aggregate.execute(aggregate, command)
-          |> normalize_to_list()
-
-        new_aggregate = Enum.reduce(events, aggregate, &Aggregate.apply(&2, &1))
-
-        {events, new_aggregate}
-    end)
   end
 
   defp sync_aggregate(stack, agg_mod, agg_id) do
