@@ -7,9 +7,10 @@ defmodule Calamity do
   Documentation for `Calamity`.
   """
 
-  alias Calamity.Aggregate
   alias Calamity.Command
   alias Calamity.Stack
+  alias Calamity.AggregateStore
+  alias Calamity.ProcessManagerStore
 
   require Logger
 
@@ -32,18 +33,9 @@ defmodule Calamity do
     Logger.debug("Aggregate emitted events #{inspect(events, pretty: true)}")
 
     {new_commands, new_process_managers} =
-      combinations(events, stack.process_manager_mods)
-      |> Enum.reduce({[], stack.process_manager_store}, fn {event, mod}, {commands, process_managers} ->
-        {new_commands, new_process_managers} =
-          Access.get_and_update(process_managers, mod, fn
-            nil ->
-              Calamity.ProcessManager.Base.handle_event(mod, %{}, event)
-
-            pms_for_mod ->
-              Calamity.ProcessManager.Base.handle_event(mod, pms_for_mod, event)
-          end)
-
-        {normalize_to_list(new_commands) ++ commands, new_process_managers}
+      Enum.reduce(events, {[], stack.process_manager_store}, fn event, {commands, store} ->
+        {new_commands, store} = ProcessManagerStore.handle_event(store, event, stack.process_manager_mods)
+        {new_commands ++ commands, store}
       end)
 
     Logger.debug("Process managers emitted commands #{inspect(new_commands, pretty: true)}")
@@ -97,36 +89,13 @@ defmodule Calamity do
   defp apply_events(stack, agg_mod, agg_id, events) do
     agg_version = Access.get(stack.aggregate_versions, agg_id, 0)
 
-    {nil, aggregates} =
-      Access.get_and_update(stack.aggregate_store, agg_id, fn
-        nil ->
-          aggregate = Enum.reduce(events, agg_mod.new(agg_id), &Aggregate.apply(&2, &1))
-
-          {nil, aggregate}
-
-        aggregate ->
-          new_aggregate = Enum.reduce(events, aggregate, &Aggregate.apply(&2, &1))
-
-          {nil, new_aggregate}
-      end)
+    agg_store = AggregateStore.apply(stack.aggregate_store, agg_mod, agg_id, events)
 
     new_agg_version = agg_version + Enum.count(events)
     new_version_store = Map.put(stack.aggregate_versions, agg_id, new_agg_version)
 
-    %Stack{stack | aggregate_store: aggregates, aggregate_versions: new_version_store}
+    %Stack{stack | aggregate_store: agg_store, aggregate_versions: new_version_store}
   end
-
-  defp combinations(a, b) do
-    Enum.flat_map(a, fn a_elem ->
-      Enum.map(b, fn b_elem ->
-        {a_elem, b_elem}
-      end)
-    end)
-  end
-
-  defp normalize_to_list(nil), do: []
-  defp normalize_to_list(items) when is_list(items), do: items
-  defp normalize_to_list(item), do: [item]
 
   def aggregate do
     quote do

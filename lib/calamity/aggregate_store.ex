@@ -1,5 +1,6 @@
 defprotocol Calamity.AggregateStore do
   def dispatch(store, command)
+  def apply(store, aggregate_module, aggregate_id, event)
 end
 
 defimpl Calamity.AggregateStore, for: Map do
@@ -8,7 +9,7 @@ defimpl Calamity.AggregateStore, for: Map do
   def dispatch(store, command) do
     {agg_mod, agg_id} = Command.aggregate(command)
 
-    Access.get_and_update(store, agg_id, fn
+    Map.get_and_update(store, agg_id, fn
       nil ->
         aggregate = agg_mod.new(agg_id)
         events =
@@ -28,6 +29,22 @@ defimpl Calamity.AggregateStore, for: Map do
 
         {events, new_aggregate}
     end)
+  end
+
+  def apply(store, agg_mod, agg_id, events) do
+    {nil, aggregates} =
+      Access.get_and_update(store, agg_id, fn
+        nil ->
+          aggregate = Enum.reduce(events, agg_mod.new(agg_id), &Aggregate.apply(&2, &1))
+
+          {nil, aggregate}
+
+        aggregate ->
+          new_aggregate = Enum.reduce(events, aggregate, &Aggregate.apply(&2, &1))
+
+          {nil, new_aggregate}
+      end)
+    aggregates
   end
 
   defp normalize_to_list(nil), do: []
