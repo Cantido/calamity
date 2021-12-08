@@ -11,6 +11,7 @@ defmodule Calamity do
   alias Calamity.Stack
   alias Calamity.AggregateStore
   alias Calamity.ProcessManagerStore
+  alias Calamity.VersionStore
 
   require Logger
 
@@ -63,7 +64,7 @@ defmodule Calamity do
           %Stack{stack |
             event_store: event_store,
             aggregate_store: aggregate_store,
-            aggregate_versions: Map.put(stack.aggregate_versions, agg_id, agg_version + Enum.count(events))
+            aggregate_versions: VersionStore.increment_version(stack.aggregate_versions, agg_id, Enum.count(events))
           }
         {stack, events}
       {:error, :stream_exists} ->
@@ -87,12 +88,11 @@ defmodule Calamity do
   end
 
   defp apply_events(stack, agg_mod, agg_id, events) do
-    agg_version = Access.get(stack.aggregate_versions, agg_id, 0)
+    agg_store =
+      AggregateStore.apply(stack.aggregate_store, agg_mod, agg_id, events)
 
-    agg_store = AggregateStore.apply(stack.aggregate_store, agg_mod, agg_id, events)
-
-    new_agg_version = agg_version + Enum.count(events)
-    new_version_store = Map.put(stack.aggregate_versions, agg_id, new_agg_version)
+    new_version_store =
+      VersionStore.increment_version(stack.aggregate_versions, agg_id, Enum.count(events))
 
     %Stack{stack | aggregate_store: agg_store, aggregate_versions: new_version_store}
   end
