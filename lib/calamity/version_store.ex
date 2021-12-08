@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2021 Rosa Richter
+#
+# SPDX-License-Identifier: MIT
+
 defprotocol Calamity.VersionStore do
   def increment_version(store, id, amount)
 end

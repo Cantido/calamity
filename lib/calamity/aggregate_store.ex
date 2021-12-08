@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2021 Rosa Richter
+#
+# SPDX-License-Identifier: MIT
+
 defprotocol Calamity.AggregateStore do
   def dispatch(store, command)
   def apply(store, aggregate_module, aggregate_id, event)

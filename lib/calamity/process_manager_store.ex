@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2021 Rosa Richter
+#
+# SPDX-License-Identifier: MIT
+
 defprotocol Calamity.ProcessManagerStore do
   def handle_event(store, event, process_manager_modules)
 end
