@@ -58,31 +58,10 @@ defmodule Calamity do
   end
 
   defp execute(stack, command) do
+    {events, aggregate_store} = Calamity.AggregateStore.dispatch(stack.aggregate_store, command)
+
     {agg_mod, agg_id} = Command.aggregate(command)
     agg_version = Access.get(stack.aggregate_versions, agg_id, 0)
-
-    {events, new_aggregates} =
-      Access.get_and_update(stack.aggregate_store, agg_id, fn
-        nil ->
-          aggregate = agg_mod.new(agg_id)
-          events =
-            Aggregate.execute(aggregate, command)
-            |> normalize_to_list()
-
-          new_aggregate = Enum.reduce(events, aggregate, &Aggregate.apply(&2, &1))
-
-          {events, new_aggregate}
-
-        aggregate ->
-          events =
-            Aggregate.execute(aggregate, command)
-            |> normalize_to_list()
-
-          new_aggregate = Enum.reduce(events, aggregate, &Aggregate.apply(&2, &1))
-
-          {events, new_aggregate}
-      end)
-
     expected_version = if agg_version == 0, do: :no_stream, else: agg_version
 
     Calamity.EventStore.append(stack.event_store, agg_id, events, expected_version: expected_version)
@@ -91,7 +70,7 @@ defmodule Calamity do
         stack =
           %Stack{stack |
             event_store: event_store,
-            aggregate_store: new_aggregates,
+            aggregate_store: aggregate_store,
             aggregate_versions: Map.put(stack.aggregate_versions, agg_id, agg_version + Enum.count(events))
           }
         {stack, events}
@@ -112,20 +91,26 @@ defmodule Calamity do
       Logger.debug("Catching up aggregate #{inspect agg_id} with #{Enum.count(missed_events)} new events")
     end
 
+    apply_events(stack, agg_mod, agg_id, missed_events)
+  end
+
+  defp apply_events(stack, agg_mod, agg_id, events) do
+    agg_version = Access.get(stack.aggregate_versions, agg_id, 0)
+
     {nil, aggregates} =
       Access.get_and_update(stack.aggregate_store, agg_id, fn
         nil ->
-          aggregate = Enum.reduce(missed_events, agg_mod.new(agg_id), &Aggregate.apply(&2, &1))
+          aggregate = Enum.reduce(events, agg_mod.new(agg_id), &Aggregate.apply(&2, &1))
 
           {nil, aggregate}
 
         aggregate ->
-          new_aggregate = Enum.reduce(missed_events, aggregate, &Aggregate.apply(&2, &1))
+          new_aggregate = Enum.reduce(events, aggregate, &Aggregate.apply(&2, &1))
 
           {nil, new_aggregate}
       end)
 
-    new_agg_version = agg_version + Enum.count(missed_events)
+    new_agg_version = agg_version + Enum.count(events)
     new_version_store = Map.put(stack.aggregate_versions, agg_id, new_agg_version)
 
     %Stack{stack | aggregate_store: aggregates, aggregate_versions: new_version_store}
