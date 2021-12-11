@@ -21,9 +21,9 @@ defmodule Calamity do
   Calamity is protocol-driven, which means that all arguments to this function only need to implement the correct protocols.
 
   - `command` must implement `Calamity.Command`
-  - `aggregates` must implement `Access`, and contain structs implementing `Calamity.Aggregate`
+  - `aggregates` must implement `Calamity.AggregateStore`, and contain structs implementing `Calamity.Aggregate`
   - `process_manager_modules` must implement `Enumerable` and contain modules
-  - `process_managers` must implement `Access` at two levels
+  - `process_managers` must implement `Calamity.ProcessManagerStore`.
   - `event_store` must implement `Calamity.EventStore`
   """
   def dispatch(stack, command) do

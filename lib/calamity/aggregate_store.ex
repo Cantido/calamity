@@ -3,7 +3,20 @@
 # SPDX-License-Identifier: MIT
 
 defprotocol Calamity.AggregateStore do
+  @moduledoc """
+  Stores `Calamity.Aggregate` structs.
+  """
+
+  @doc """
+  Execute a command and then update an aggregate from the events it emits.
+
+  Returns `{events, store}`.
+  """
   def dispatch(store, command)
+
+  @doc """
+  Update an aggregate from an event. Returns the store.
+  """
   def apply(store, aggregate_module, aggregate_id, event)
 end
 

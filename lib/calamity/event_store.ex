@@ -29,6 +29,9 @@ defprotocol Calamity.EventStore do
 
   The `stream_id` can be a string stream ID or `:all` to return all events.
 
+  Returns an `Enumerable` of tuples, where the first element of the tuple is the event,
+  and the second element of the tuple is a `Calamity.EventMetadata` struct.
+
   ## Options
 
   - `direction` - the direction in time that the events should be ordered.

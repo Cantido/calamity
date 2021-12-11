@@ -3,6 +3,15 @@
 # SPDX-License-Identifier: MIT
 
 defprotocol Calamity.ProcessManagerStore do
+  @moduledoc """
+  Stores `Calamity.ProcessManager` objects.
+  """
+
+  @doc """
+  Update a process manager and produce new commands from the given event.
+
+  Returns `{commands, store}`.
+  """
   def handle_event(store, event, process_manager_modules)
 end
 
