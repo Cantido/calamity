@@ -78,7 +78,6 @@ defmodule Calamity do
     agg_version = Access.get(stack.aggregate_versions, agg_id, 0)
     missed_events =
       Calamity.EventStore.stream(stack.event_store, agg_id, start_version: agg_version)
-      |> Enum.map(&elem(&1, 0))
 
     if Enum.count(missed_events) > 0 do
       Logger.debug("Catching up aggregate #{inspect agg_id} with #{Enum.count(missed_events)} new events")

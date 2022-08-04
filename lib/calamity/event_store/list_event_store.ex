@@ -7,8 +7,6 @@ defmodule Calamity.EventStore.ListEventStore do
   A simple in-memory event store.
   """
 
-  alias Calamity.EventMetadata
-
   defstruct streams: %{},
             subscribers: %{}
 
@@ -16,15 +14,10 @@ defmodule Calamity.EventStore.ListEventStore do
     def append(store, stream_id, events, opts) do
       case assert_version(store, stream_id, Keyword.get(opts, :expected_version, :any)) do
         :ok ->
-          new_events =
-            Enum.map(events, fn event ->
-              {event, %EventMetadata{created_at: DateTime.utc_now()}}
-            end)
-
           updated_streams =
             store.streams
             |> Map.put_new(stream_id, [])
-            |> Map.update!(stream_id, fn previous_events -> previous_events ++ new_events end)
+            |> Map.update!(stream_id, fn previous_events -> previous_events ++ events end)
 
           subs_to_version = Map.get(store.subscribers, stream_id, [])
           subs_to_all = Map.get(store.subscribers, :all, [])
